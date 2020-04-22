@@ -1,0 +1,106 @@
+Description:
+Player can customize a set of character and fight a wave of enemies.
+Story element need to be implemented.
+
+Character
+	Name
+		Name of the character
+	Colour
+		Character colour
+	Trait
+		Character trait
+	Leader
+		Effect of the character activate when they are leader of the team 
+		Ex. Increase base Health for Green Character by 2 times
+	Health
+		Health of the character
+	Attack
+		Attack stat of the character 
+	Special
+		Has a cost value with a ability of what the special of the character
+			Ex. Change the board blue colour shape to green colour
+	Ultimate
+		Special effect for the character (must fulfill condition read the Connecting Shape Section to know more in detail)
+			Ex. Deal damage
+	Ace
+		Special effect for the character (must fulfill condition read the Connecting Shape Section to know more in detail)
+			Ex. Deal damage
+	Condition
+		Only appear in game mode
+		Special condition placed on the character
+		Ex. Cannot activate special
+Enemy
+	Name
+		Name of the ememy
+	Colour
+		Enemy colour
+	Trait
+		Enemy trait
+	Health
+		Health of the enemy
+	Attack
+		Attack stat of the character 
+	Special
+		Special of the character
+			Ex. Block special of front character for 3 turns
+Tile
+	Colour
+		Red
+		Green
+		Blue
+		Yellow (Wild colour)
+	Shape
+		Circle
+		Triangle
+		Square
+		Star (Wild shape)
+
+Game Mechanics
+Battle
+There will be 3 characters in the front and 3 characters in the back
+Each turn the player can make up to 3 actions
+	Attack
+		Deal damage based on your attack stat * # of connected shapes on the screen
+		Please Refer in the Connecting Shape Section to know more in detail
+	Special
+		Use up special meter and activate special ability (each character has different abilities)
+	Switch
+		Switch 1 character in the front with the back
+Connecting Shape
+	Player will see 5x5 grid of tiles
+	Player will start on any space on the grid and try to connect as many as they want in a single flow (in any direction) without overlapping
+	The rule for connecting is they must be all the same shape or colour excluding special wild space
+		Ex. Connect 3 green colour shape
+		Ex. Connect 2 square shape
+		Ex. Connect 3 red triangle shape
+	Bonus damage may occur when the colour and character colour are the same
+		Ex. Red type character and connected 3 red shapes. Deal double damage bonus damage after damage total = (atk * 3 shapes) * 2 (same colour)
+	When the connected tiles has been used they become removed and a new set of tiles will fill in from top to bottom order and left to right in each row
+	The filled in shape are random (But user can see the next 3 shapes and colour that will get filled in)
+		Ex. Next tiles (Green Triangle, Blue Square, Blue Square). Player connected 2 red square. The Green Triangle gets placed first then Blue Square gets filled in. After the next tiles will be (Blue Square, Blue Triangle, Red Circle)
+	When player is able to connect a total of 16+ then activate ultimate
+	When player is able to connect a total of 25 then activate ace
+Enemy Turn
+	Attack
+		Deal damage based on their attack stat to a specific character 
+	Special
+		Activate special ability depending on health or cooldown time
+Damage Calculation
+	Attack stat of the character * number of connected tiles
+	Bonus multiplier for weekness
+		Red > Green > Blue > Red
+	Bonus multiplier for same colour (x2)
+Health Calculation
+	Add the total health of all the character in your team
+	Each health might have adjusted value
+		Ex. 50hp (base) * Leader Skill effect (*3) = 150hp
+Lose Condition
+	When player health reach 0
+Win Condition
+	When player was able to reduce all enemy health to 0
+
+Customize
+Player can set up to 5 character where they are 3 character in the front while 2 in the back. Last character spot is for guest character (another player of CPU generated character)
+Player choose a leader from one of the 5 characters
+Guest and CPU also are selected as leader (meaning in the game their are 2 leader ability active)
+Cannot select duplicate or same name of the character
