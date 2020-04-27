@@ -129,7 +129,7 @@ class GameScene extends Phaser.Scene {
 
 
 
-    }
+    
 
         this.scene.bringToTop("GameScene");
     }    
