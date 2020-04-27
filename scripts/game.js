@@ -36,7 +36,6 @@ class GameScene extends Phaser.Scene {
         this.load.image('yellow_star', 'tiles/yellow_star.png');
 
     }
-
     create ()
     {
         var background = this.add.image(400, 300, 'forest');
@@ -78,6 +77,48 @@ class GameScene extends Phaser.Scene {
 
             }
         );
+        //create a health bar outline
+        var healthBarOutline = this.add.rectangle(400, 50, 700, 25);
+
+        healthBarOutline.setStrokeStyle(5, 0x00ff00);
+        //create health bar fill
+        var healthBarFill = this.add.rectangle(50, 35, 700, 25, 0x00ff00).setOrigin(0, 0);
+
+        //set the health data attribute and color function
+        healthBarOutline.setDataEnabled();
+
+        healthBarOutline.data.set('health', 100);
+
+        //set listener to change health bar outline and fill color and percent, set to pointerdown just to test
+
+
+
+        this.input.on('pointerdown', function () {
+            if(healthBarOutline.data.get('health') > 0){
+                healthBarOutline.data.values.health -= 2;
+                console.log('decreasing health value');
+            }
+            else{
+                healthBarOutline.data.values.health = 0;
+            }
+
+
+        });
+        //add function to change health bar and fill when health is changed, for whatever reason 'changedata-health' won't trigger, so the broad 'changedata'
+        //is used instead on the healthbarOutline
+        healthBarOutline.on('changedata',  function (gameObject, value)  {
+            if(value < 0){
+                gameObject.data.value.health = 0;
+            }
+            console.log(`updating health display`);
+            let currentHealth = healthBarOutline.data.get('health');
+            healthBarOutline.setStrokeStyle(5, UpdateHealthBarColor(currentHealth));
+            healthBarFill.displayWidth =  (currentHealth / 100 * 700);
+            healthBarFill.setFillStyle(UpdateHealthBarColor(currentHealth));
+        });
+
+
+
     }
 
 }
@@ -131,4 +172,32 @@ function GenerateNewTile(gameManager, x, y) {
         shape = "star";
     }
     return new Tile (x, y, colour, shape, gameManager);
+}
+
+//function to set health bar fill and color based on health input
+
+function UpdateHealthBarColor(health) {
+    try {
+        let returnColor;
+        //set the R,G based on being above below set point (50)
+        if(health >= 50) {
+            let red = Math.floor((-((health - 100) / 100 * 2 * 0xFF))).toString(16);
+            returnColor = parseInt(`0x${red}FF00`);
+            console.log(`red value is ${red} and returnColor is ${returnColor}`);
+        }
+        else{
+            let green = Math.floor((((health * 2) / 100  * 0xFF))).toString(16);
+            //add preceeding zero when under 10 to maintain proper hex value
+            if(green.length < 2) {
+                green = `0${green}`;
+            }
+            returnColor = parseInt(`0xFF${green}00`);
+            console.log(`green value is ${green} and returnColor is ${returnColor}`);
+        }
+        return returnColor;
+    }
+    catch(err) {
+        console.log(`There was an error updating the healthbar with a value of ${health} and error code ${err}`)
+    }
+
 }
