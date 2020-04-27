@@ -117,6 +117,45 @@ class GameScene extends Phaser.Scene {
             healthBarFill.setFillStyle(UpdateHealthBarColor(currentHealth));
         });
 
+        //create basic special bar
+        //create a special bar outline
+        var specialBarOutline = this.add.rectangle(400, 90, 700, 25);
+
+        specialBarOutline.setStrokeStyle(5, 0x49def5);
+
+        //create special bar fill
+        var specialBarFill = this.add.rectangle(50, 75, 700, 25, 0x49def5).setOrigin(0, 0);
+
+        //set the health data attribute and color function
+        specialBarOutline.setDataEnabled();
+
+        specialBarOutline.data.set('special', 100);
+
+        //set listener to change special bar fill percent, set to right arrow down just to test
+
+        this.input.keyboard.on('keydown', function (event) {
+            if(specialBarOutline.data.get('special') > 0){
+                specialBarOutline.data.values.special -= 2;
+                console.log('decreasing special value');
+            }
+            else{
+                specialBarOutline.data.values.special = 0;
+            }
+
+
+        });
+
+        //add function to change special bar fill when special is changed, for whatever reason 'changedata-special' won't trigger, so the broad 'changedata'
+        //is used instead on the specialBarOutline
+        specialBarOutline.on('changedata',  function (gameObject, value)  {
+            if(value < 0){
+                gameObject.data.value.special = 0;
+            }
+            console.log(`updating special display`);
+            let currentSpecial = specialBarOutline.data.get('special');
+            specialBarFill.displayWidth =  (currentSpecial / 100 * 700);
+        });
+
 
 
     }
