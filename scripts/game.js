@@ -1,39 +1,19 @@
 
 class GameScene extends Phaser.Scene {
     constructor() {
-        super();
-
-        this.gameManager = null;
+        super({ key: "GameScene" , active: true });
 
         //6 Positions with (x,y)
         this.CHARACTER_POSITIONS = [[175, 250], [175, 375], [175, 500], [50, 250], [50, 375], [50, 500]];
         this.characters = Array();
 
-        this.colourRule = "";
-        this.shapeRule = "";
-        this.numberConnected = 0;
-        this.tiles = Array();
-        this.nextTiles = Array();
-        this.collectedTiles = Array();
     }
 
     preload ()
     {
-        this.gameManager = this;
         this.load.setPath('assets/');
         this.load.image('forest', 'background/forest.png');
         this.load.spritesheet('sara', 'sara/sara.png', { frameWidth: 200, frameHeight: 200 });
-
-        this.load.image('green_square', 'tiles/green_square.png');
-        this.load.image('blue_square', 'tiles/blue_square.png');
-        this.load.image('red_square', 'tiles/red_square.png');
-        this.load.image('green_triangle', 'tiles/green_triangle.png');
-        this.load.image('blue_triangle', 'tiles/blue_triangle.png');
-        this.load.image('red_triangle', 'tiles/red_triangle.png');
-        this.load.image('green_circle', 'tiles/green_circle.png');
-        this.load.image('blue_circle', 'tiles/blue_circle.png');
-        this.load.image('red_circle', 'tiles/red_circle.png');
-        this.load.image('yellow_star', 'tiles/yellow_star.png');
 
     }
 
@@ -51,84 +31,64 @@ class GameScene extends Phaser.Scene {
             this.add.sprite(this.CHARACTER_POSITIONS[i][0], this.CHARACTER_POSITIONS[i][1], 'sara')));
         }
 
-        SetUpAnimations(this.gameManager);
+        SetUpAnimations(this);
         
         for (let i = 0; i < 6; i++) {
             //characters[i].anims.play('idle', true);
             this.characters[i].sprite.anims.play('idle', true);
         }    
         this.characters[2].sprite.anims.play('attack', true);
+        
 
-        //Create the tiles
-        for (let i = 0; i < 5; i++) {
-            this.tiles.push(new Array());
-            for (let j = 0; j < 5; j++) {
-                this.tiles[i].push(GenerateNewTile(this.gameManager, i, j));
-            }   
-        }
-        for (let i = 0; i < 3; i++) {
-            //Position 5 is the row 6 for the TILES_POSITION which is the next tiles positions
-            this.nextTiles.push(GenerateNewTile(this.gameManager, 5, i));
-        }
-
-        //Create a attack button
+        //Create a attack button (Note this is just a test button!!!)
         var attackButton = this.add.text(100, 100, 'Attack', { fill: '#ffffff' })
             .setInteractive()
             .on('pointerup', () => {
-
+                this.scene.pause("GameScene");
+                this.scene.bringToTop("AttackScene");
+                this.scene.resume("AttackScene");
             }
         );
-    }
 
+        this.scene.bringToTop("GameScene");
+    }    
+
+
+    /*
+    This code is referenced from: http://labs.phaser.io/edit.html?src=src%5Cscenes%5Cdrag%20scenes%20demo.js
+    Function will create a window for the scene (Code that can be used for the character menu may not need it)
+    */
+    createWindow (func)
+    {
+        var x = Phaser.Math.Between(400, 600);
+        var y = Phaser.Math.Between(64, 128);
+
+        var handle = 'window' + this.count++;
+
+        var win = this.add.zone(x, y, func.WIDTH, func.HEIGHT).setInteractive().setOrigin(0);
+
+        var demo = new func(handle, win);
+
+        this.input.setDraggable(win);
+
+        win.on('drag', function (pointer, dragX, dragY) {
+
+            this.x = dragX;
+            this.y = dragY;
+
+            demo.refresh()
+
+        });
+
+        this.scene.add(handle, demo, true);
+    }
 }
 
 var config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
-    scene: [GameScene]
+    scene: [GameScene, AttackScene]
 };
 
 var game = new Phaser.Game(config);
-
-//Function that create a new tile at position (-1, -1) when no value is passed
-//otherwise create the tile at the given position (in the object not the scene itself)
-function GenerateNewTile(gameManager, x, y) {
-    let randomNumber = Math.floor(Math.random() * 4); //Random Number between 0 - 3
-    var colour = "";
-    switch (randomNumber) {
-        case 0:
-            colour = "red";
-            break;
-        case 1:
-            colour = "green";
-            break;
-        case 2:
-            colour = "blue";
-            break;
-        default:
-            colour = "yellow";
-            break;
-    }
-    var shape = "";
-    //Colour is wild tile meaning the shape can only be star
-    if (randomNumber != 3)
-    {
-        randomNumber = Math.floor(Math.random() * 3); //Random Number between 0 - 2
-        switch (randomNumber) {
-            case 0:
-                shape = "circle";
-                break;
-            case 1:
-                shape = "triangle";
-                break;
-            default:
-                shape = "square";
-                break;
-        }
-    }
-    else {
-        shape = "star";
-    }
-    return new Tile (x, y, colour, shape, gameManager);
-}
