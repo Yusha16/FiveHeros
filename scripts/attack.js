@@ -14,6 +14,7 @@ class AttackScene extends Phaser.Scene {
         this.tiles = Array();
         this.nextTiles = Array();
         this.collectedTiles = Array();
+
     }
 
     preload () {
@@ -44,20 +45,40 @@ class AttackScene extends Phaser.Scene {
         this.cameras.main.setViewport(this.x, this.y, this.width, this.height);
 
         //Create the tiles
-        for (let i = 0; i < 5; i++) {
+        for (let y = 0; y < 5; y++) {
             this.tiles.push(new Array());
-            for (let j = 0; j < 5; j++) {
-                this.tiles[i].push(this.GenerateNewTile(i, j));
+            for (let x = 0; x < 5; x++) {
+                this.tiles[y].push(this.GenerateNewTile(x, y));
+                this.tiles[y][x].image.setInteractive();
+                //Start the Chain
+                this.tiles[y][x].image.on('pointerup', () => {
+                    this.tiles[y][x].image.setAlpha(0.5);
+                    this.numberConnected++;
+                    this.collectedTiles.push(this.tiles[y][x]);
+                    this.colourRule = this.tiles[y][x].colour;
+                    this.shapeRule = this.tiles[y][x].shape;
+                });
+                //Continue the Chain
+                this.tiles[y][x].image.on('pointerover', () => {
+                    //Check the rules if the chain can happen
+                    if(this.numberConnected > 0 && this.CheckConnectionRule(x, y)) {            
+                        this.numberConnected++;
+                        this.collectedTiles.push(this.tiles[y][x]);
+                        this.tiles[y][x].image.setAlpha(0.5);
+                    }
+                });
             }   
         }
         for (let i = 0; i < 3; i++) {
             //Position 5 is the row 6 for the TILES_POSITION which is the next tiles positions
-            this.nextTiles.push(this.GenerateNewTile(5, i));
+            this.nextTiles.push(this.GenerateNewTile(i, 5));
         }
 
         //Create a cancel button
         var cancelButton = this.add.image(60, 50, "red_button").setInteractive()
             .on('pointerup', () => {
+                //Must remove all the collected tile (realistically they can't do this command, but just in case)
+
                 this.scene.pause("AttackScene");
                 this.scene.bringToTop("GameScene");
                 this.scene.resume("GameScene");
@@ -78,6 +99,67 @@ class AttackScene extends Phaser.Scene {
             fill: 'white',
             }
         );
+    }
+
+    //Return a bool flag if the added tile can be part of the chain
+    //Rules:
+    //The added tile is adjacent to the last tile in the chain
+    //Do note that the chain can only have the same colour or the same shape
+        //The tile is the same colour as the chain
+        //The tile is the same shape as the chain
+    //Special Case: The tile is a wild tile (yellow star)
+    //The added tile is not in the chain already
+    //Parameter:
+    //x: the x position in the grid (0-indexed)
+    //y: the y position in the grid (0-indexed)
+    CheckConnectionRule(x, y) {
+        //First check if the tiles in not in the chain
+        if (this.collectedTiles.includes(this.tiles[y][x])) {
+            return false;
+        }
+        //Check if the tile is adjacent to the last tile in the chain
+        let lastX = this.collectedTiles[this.collectedTiles.length - 1].x;
+        let lastY = this.collectedTiles[this.collectedTiles.length - 1].y;
+        if (!((lastX + 1 === x || lastX === x || lastX -1 === x) && 
+        (lastY + 1 === y || lastY === y || lastY -1 === y))) {
+            console.log("Not Connected: (" + lastY + "," + lastX + ") with (" + y + "," + x + ")");
+            return false;
+        }
+        //if the rule right now is wild tile then set the new tile as the rule
+        if (this.colourRule === "yellow") {
+            this.colourRule = this.tiles[y][x].colour;
+            this.shapeRule = this.tiles[y][x].shape;
+            return true;
+        }
+        //if the tile added is a wild tile
+        if (this.tiles[y][x].colour === "yellow") {
+            return true;
+        }
+        //Now check if the tile follow the chain rule (shape or colour)
+        //This means the rule is checking the shape
+        if (this.colourRule === "" && this.shapeRule === this.tiles[y][x].shape) {
+            return true;
+        }
+        //This means the rule is checking the colour
+        else if (this.shapeRule === "" && this.colourRule === this.tiles[y][x].colour) {
+            return true;
+        }
+        //If the colour and shape of the rule are the same as the new tile
+        else if (this.colourRule === this.tiles[y][x].colour && this.shapeRule === this.tiles[y][x].shape) {
+            return true;
+        }
+        //This is when the player has both rule and decide on which specific one from the new tile
+        //Ex. Current Rule Green Square then new Tile is a Green Circle meaning the new rule is only green colour shape
+        else if (this.colourRule === this.tiles[y][x].colour) {
+            this.shapeRule = "";
+            return true;
+        }
+        else if (this.shapeRule === this.tiles[y][x].shape) {
+            this.colourRule = "";
+            return true;
+        }
+        //The new tile does not follow the chain rule
+        return false;
     }
 
     //Function that create a new tile at position x, y
