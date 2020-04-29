@@ -15,6 +15,7 @@ class AttackScene extends Phaser.Scene {
         this.nextTiles = Array();
         this.collectedTiles = Array();
         this.connectedTilesText = null;
+        this.graphicsLine = null;
 
         this.stopInput = false;
     }
@@ -73,14 +74,14 @@ class AttackScene extends Phaser.Scene {
         );
         cancelButton.scaleX = 0.6;
         cancelButton.scaleY = 0.6;
-        cancelButton.depth = 1;
+        cancelButton.depth = 10;
         var cancelText =  this.add.text(25, 35, 'Cancel', { 
             //fontSize: "24px",
             font: 'bold 24px Arial',
             fill: 'white',
             }
         );
-        cancelText.depth = 1;
+        cancelText.depth = 10;
 
         this.connectedTilesText =  this.add.text(335, 35, '0 Tile(s)', { 
             //fontSize: "24px",
@@ -158,11 +159,13 @@ class AttackScene extends Phaser.Scene {
                     }
                 }
             }
+            //Stop all input for the tiles and cancel button
             this.scene.stopInput = true;
 
             this.scene.time.delayedCall(delayAmount + 500, () => {
+                //Turn back the input for the tiles and cancel button
                 this.scene.stopInput = false;
-                console.log(this.scene);
+                //Reset the text for the connected tiles
                 this.scene.connectedTilesText.setText("0 Tile(s)");
                 //Go back to the Game Scene and hide the Attack Scene
                 this.scene.scene.pause("AttackScene");
@@ -175,14 +178,20 @@ class AttackScene extends Phaser.Scene {
             //Clear out all the data of the collected tiles
             this.scene.numberConnected = 0;
             this.scene.collectedTiles = Array();
+            //Clear out the line data
+            this.scene.graphicsLine.clear();
+            this.scene.graphicsLine.lineStyle(8, "0xFFC0CB", 1); 
             //Reset the rules
             this.scene.colourRule = "";
             this.scene.shapeRule = "";
         });
+
+        //Set up the graphics for the line
+        this.graphicsLine = this.add.graphics();
+        this.graphicsLine.lineStyle(8, "0xFFC0CB", 1);
     }
 
     update() {
-        //var pointer = this.input.activePointer;
     }
 
     //Return a bool flag if the added tile can be part of the chain
@@ -310,6 +319,10 @@ class AttackScene extends Phaser.Scene {
                 this.collectedTiles.push(tile);
                 tile.image.setAlpha(0.5);
                 this.connectedTilesText.setText(this.numberConnected + " Tile(s)");
+                //Draw a line connecting the tile
+                let line = new Phaser.Geom.Line(this.collectedTiles[this.numberConnected - 2].image.x, 
+                    this.collectedTiles[this.numberConnected - 2].image.y, tile.image.x, tile.image.y);
+                this.graphicsLine.strokeLineShape(line);
                 console.log("Connect");
             }
         });

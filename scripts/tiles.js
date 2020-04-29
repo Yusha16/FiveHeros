@@ -43,6 +43,7 @@ function Tile(x, y, colour, shape, gameManager) {
     this.colour = colour;
     this.shape = shape;
     this.image = gameManager.add.image(TILES_POSITIONS[y][x][0], TILES_POSITIONS[y][x][1], colour + "_" + shape);
+    this.image.depth = 1;
 }
 
 
