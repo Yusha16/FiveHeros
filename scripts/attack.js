@@ -14,6 +14,7 @@ class AttackScene extends Phaser.Scene {
         this.tiles = Array();
         this.nextTiles = Array();
         this.collectedTiles = Array();
+        this.connectedTilesText = null;
 
         this.stopInput = false;
     }
@@ -81,7 +82,7 @@ class AttackScene extends Phaser.Scene {
         );
         cancelText.depth = 1;
 
-        var connectedTilesText =  this.add.text(335, 35, '0 Tile(s)', { 
+        this.connectedTilesText =  this.add.text(335, 35, '0 Tile(s)', { 
             //fontSize: "24px",
             font: 'bold 24px Arial',
             fill: 'white',
@@ -161,6 +162,8 @@ class AttackScene extends Phaser.Scene {
 
             this.scene.time.delayedCall(delayAmount + 500, () => {
                 this.scene.stopInput = false;
+                console.log(this.scene);
+                this.scene.connectedTilesText.setText("0 Tile(s)");
                 //Go back to the Game Scene and hide the Attack Scene
                 this.scene.scene.pause("AttackScene");
                 this.scene.scene.bringToTop("GameScene");
@@ -175,12 +178,6 @@ class AttackScene extends Phaser.Scene {
             //Reset the rules
             this.scene.colourRule = "";
             this.scene.shapeRule = "";
-            //Go back to the Game Scene and hide the Attack Scene
-            //this.scene.scene.pause("AttackScene");
-            //this.scene.scene.bringToTop("GameScene");
-            //this.scene.scene.resume("GameScene");
-            //Must call a Attack function to initiate the attack
-            //Attack(damageAmount, collectedTilesAmount);
         });
     }
 
@@ -301,6 +298,7 @@ class AttackScene extends Phaser.Scene {
                 this.collectedTiles.push(tile);
                 this.colourRule = tile.colour;
                 this.shapeRule = tile.shape;
+                this.connectedTilesText.setText(this.numberConnected + " Tile(s)");
                 console.log("Start");
             }
         });
@@ -311,6 +309,7 @@ class AttackScene extends Phaser.Scene {
                 this.numberConnected++;
                 this.collectedTiles.push(tile);
                 tile.image.setAlpha(0.5);
+                this.connectedTilesText.setText(this.numberConnected + " Tile(s)");
                 console.log("Connect");
             }
         });
