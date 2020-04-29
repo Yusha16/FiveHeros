@@ -15,6 +15,7 @@ class AttackScene extends Phaser.Scene {
         this.nextTiles = Array();
         this.collectedTiles = Array();
 
+        this.stopInput = false;
     }
 
     preload () {
@@ -49,26 +50,7 @@ class AttackScene extends Phaser.Scene {
             this.tiles.push(new Array());
             for (let x = 0; x < 5; x++) {
                 this.tiles[y].push(this.GenerateNewTile(x, y));
-                this.tiles[y][x].image.setInteractive();
-                //Start the Chain
-                this.tiles[y][x].image.on('pointerdown', () => {
-                    this.tiles[y][x].image.setAlpha(0.5);
-                    this.numberConnected++;
-                    this.collectedTiles.push(this.tiles[y][x]);
-                    this.colourRule = this.tiles[y][x].colour;
-                    this.shapeRule = this.tiles[y][x].shape;
-                    console.log("Start");
-                });
-                //Continue the Chain
-                this.tiles[y][x].image.on('pointerover', () => {
-                    //Check the rules if the chain can happen
-                    if(this.numberConnected > 0 && this.CheckConnectionRule(x, y)) {            
-                        this.numberConnected++;
-                        this.collectedTiles.push(this.tiles[y][x]);
-                        this.tiles[y][x].image.setAlpha(0.5);
-                        console.log("Connect");
-                    }
-                });
+                this.AddTileListener(this.tiles[y][x]);
             }   
         }
         for (let i = 0; i < 3; i++) {
@@ -81,9 +63,11 @@ class AttackScene extends Phaser.Scene {
             .on('pointerup', () => {
                 //Must remove all the collected tile (realistically they can't do this command, but just in case)
 
-                this.scene.pause("AttackScene");
-                this.scene.bringToTop("GameScene");
-                this.scene.resume("GameScene");
+                if (!this.scene.stopInput) {
+                    this.scene.pause("AttackScene");
+                    this.scene.bringToTop("GameScene");
+                    this.scene.resume("GameScene");
+                }
             }
         );
         cancelButton.scaleX = 0.6;
@@ -123,7 +107,12 @@ class AttackScene extends Phaser.Scene {
                             targets: this.scene.tiles[y][x].image,
                             alpha: 0,
                             duration: 1000,
-                            ease: 'Sine.easeIn'
+                            ease: 'Sine.easeIn',
+                            //Note this tween gets removed when the sprite is finished tweening
+                            onComplete: function() { 
+                                //Remove the sprite from rendering (will get deleted from Garbage Memory)
+                                this.targets[0].destroy(true);
+                            }
                         });
                         /*
                         if (this.scene.tiles[y][x].colour === colourBonus) {
@@ -160,16 +149,26 @@ class AttackScene extends Phaser.Scene {
                             y: TILES_POSITIONS[y][x][1],
                             duration: 1000,
                             delay: delayAmount,
-                            ease: 'Sine.easeIn',
-                            //Note this tween gets removed when the sprite is finished tweening
-                            onComplete: function() { 
-                            }
+                            ease: 'Sine.easeIn'
                         });
+                        this.scene.tiles[y][x] = nextTile;
+                        this.scene.AddTileListener(this.scene.tiles[y][x]);
                         delayAmount += 1000;
                     }
                 }
             }
-            
+            this.scene.stopInput = true;
+
+            this.scene.time.delayedCall(delayAmount + 500, () => {
+                this.scene.stopInput = false;
+                //Go back to the Game Scene and hide the Attack Scene
+                this.scene.scene.pause("AttackScene");
+                this.scene.scene.bringToTop("GameScene");
+                this.scene.scene.resume("GameScene");
+                //Must call a Attack function to initiate the attack
+                Attack(damageAmount, collectedTilesAmount);
+            });
+
             //Clear out all the data of the collected tiles
             this.scene.numberConnected = 0;
             this.scene.collectedTiles = Array();
@@ -186,7 +185,7 @@ class AttackScene extends Phaser.Scene {
     }
 
     update() {
-        var pointer = this.input.activePointer;
+        //var pointer = this.input.activePointer;
     }
 
     //Return a bool flag if the added tile can be part of the chain
@@ -290,5 +289,30 @@ class AttackScene extends Phaser.Scene {
             shape = "star";
         }
         return new Tile (x, y, colour, shape, this);
+    }
+
+    AddTileListener(tile) {
+        tile.image.setInteractive();
+        //Start the Chain
+        tile.image.on('pointerdown', () => {
+            if (!this.stopInput) {
+                tile.image.setAlpha(0.5);
+                this.numberConnected++;
+                this.collectedTiles.push(tile);
+                this.colourRule = tile.colour;
+                this.shapeRule = tile.shape;
+                console.log("Start");
+            }
+        });
+        //Continue the Chain
+        tile.image.on('pointerover', () => {
+            //Check the rules if the chain can happen
+            if(!this.stopInput && this.numberConnected > 0 && this.CheckConnectionRule(tile.x, tile.y)) {            
+                this.numberConnected++;
+                this.collectedTiles.push(tile);
+                tile.image.setAlpha(0.5);
+                console.log("Connect");
+            }
+        });
     }
 }
