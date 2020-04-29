@@ -31,7 +31,9 @@ var TILES_POSITIONS =
         [[75, 425], [150, 425], [225, 425], [300, 425], [375, 425]],
 
         //Positions for the next tiles
-        [[150, 50], [225, 50], [300, 50]]
+        [[150, 50], [225, 50], [300, 50]],
+        //Positions for the next tiles (not seen in view)
+        [[75, 50]]
     ];
 
 //Constructor for Tile

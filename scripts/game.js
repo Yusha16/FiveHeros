@@ -132,9 +132,8 @@ class GameScene extends Phaser.Scene {
     
 
         this.scene.bringToTop("GameScene");
-    }    
-
-
+    }  
+    
     /*
     This code is referenced from: http://labs.phaser.io/edit.html?src=src%5Cscenes%5Cdrag%20scenes%20demo.js
     Function will create a window for the scene (Code that can be used for the character menu may not need it)
@@ -199,5 +198,15 @@ function UpdateHealthBarColor(health) {
     catch(err) {
         console.log(`There was an error updating the healthbar with a value of ${health} and error code ${err}`)
     }
+
+}
+
+//Play attack animation for the selected character and play hurt animation for the selected enemy character
+//Also update the game scene values such as health, special meter, enemy health, and action UI amount
+//damageAmount is calculated in the attack scene due to knowing which tile is selected (same colour bonus rule)
+    //Note: damageAmount might double again if the selected character has colour advantage against the enemy
+//numConnected is number of tiles connected to know if the player can use ultimate or ace ability
+function Attack(damageAmount, numConnected) {
+    console.log("Attack");
 
 }

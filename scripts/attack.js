@@ -51,12 +51,13 @@ class AttackScene extends Phaser.Scene {
                 this.tiles[y].push(this.GenerateNewTile(x, y));
                 this.tiles[y][x].image.setInteractive();
                 //Start the Chain
-                this.tiles[y][x].image.on('pointerup', () => {
+                this.tiles[y][x].image.on('pointerdown', () => {
                     this.tiles[y][x].image.setAlpha(0.5);
                     this.numberConnected++;
                     this.collectedTiles.push(this.tiles[y][x]);
                     this.colourRule = this.tiles[y][x].colour;
                     this.shapeRule = this.tiles[y][x].shape;
+                    console.log("Start");
                 });
                 //Continue the Chain
                 this.tiles[y][x].image.on('pointerover', () => {
@@ -65,6 +66,7 @@ class AttackScene extends Phaser.Scene {
                         this.numberConnected++;
                         this.collectedTiles.push(this.tiles[y][x]);
                         this.tiles[y][x].image.setAlpha(0.5);
+                        console.log("Connect");
                     }
                 });
             }   
@@ -86,12 +88,14 @@ class AttackScene extends Phaser.Scene {
         );
         cancelButton.scaleX = 0.6;
         cancelButton.scaleY = 0.6;
+        cancelButton.depth = 1;
         var cancelText =  this.add.text(25, 35, 'Cancel', { 
             //fontSize: "24px",
             font: 'bold 24px Arial',
             fill: 'white',
             }
         );
+        cancelText.depth = 1;
 
         var connectedTilesText =  this.add.text(335, 35, '0 Tile(s)', { 
             //fontSize: "24px",
@@ -99,6 +103,90 @@ class AttackScene extends Phaser.Scene {
             fill: 'white',
             }
         );
+
+        //Add a event when the player released the mouse
+        this.input.on('pointerup', function (pointer) {
+            console.log("End");
+            //Must remove all the tiles and replace with new tiles at the same time calculate the total damage amount
+            //Fill from bottom right to top left in a left to right going up pattern
+            let damageAmount = 0;
+            let collectedTilesAmount = this.scene.numberConnected;
+            let delayAmount = 0;
+            //let colourBonus = this.scene.scene.get("GameScene").selectedCharacter.colour;
+            //let charAttack = this.scene.scene.get("GameScene").selectedCharacter.attack;
+            for (let y = 4; y >= 0; y--) {
+                for (let x = 4; x >= 0; x--) {
+                    //if the current tile is in the collected tiles then
+                    if (this.scene.collectedTiles.includes(this.scene.tiles[y][x])) {
+                        //Fade out the tile
+                        this.scene.tweens.add({
+                            targets: this.scene.tiles[y][x].image,
+                            alpha: 0,
+                            duration: 1000,
+                            ease: 'Sine.easeIn'
+                        });
+                        /*
+                        if (this.scene.tiles[y][x].colour === colourBonus) {
+                            damageAmount += charAttack * 2;
+                        }
+                        else {
+                            damageAmount += charAttack;
+                        }
+                        */
+                        //Must move the next tiles to the tiles and the next tiles line must move
+                        let nextTile = this.scene.nextTiles.pop();
+                        let newTile = this.scene.GenerateNewTile(0, 6);
+                        this.scene.nextTiles.unshift(newTile);
+                        //Update the position of the next tiles
+                        nextTile.x = x;
+                        nextTile.y = y;
+                        newTile.x = 0;
+                        newTile.y = 5;
+                        //Make the tween animation for having the tiles in the next tiles block move like a line (left to right)
+                        for (let i = 0; i < 3; i++) {
+                            this.scene.tweens.add({
+                                targets: this.scene.nextTiles[i].image,
+                                x: TILES_POSITIONS[5][i][0],
+                                y: TILES_POSITIONS[5][i][1],
+                                duration: 1000,
+                                delay: delayAmount,
+                                ease: 'Sine.easeIn'
+                            });
+                        }
+                        //Make the next tile move to empty spot in the tiles
+                        this.scene.tweens.add({
+                            targets: nextTile.image,
+                            x: TILES_POSITIONS[y][x][0],
+                            y: TILES_POSITIONS[y][x][1],
+                            duration: 1000,
+                            delay: delayAmount,
+                            ease: 'Sine.easeIn',
+                            //Note this tween gets removed when the sprite is finished tweening
+                            onComplete: function() { 
+                            }
+                        });
+                        delayAmount += 1000;
+                    }
+                }
+            }
+            
+            //Clear out all the data of the collected tiles
+            this.scene.numberConnected = 0;
+            this.scene.collectedTiles = Array();
+            //Reset the rules
+            this.scene.colourRule = "";
+            this.scene.shapeRule = "";
+            //Go back to the Game Scene and hide the Attack Scene
+            //this.scene.scene.pause("AttackScene");
+            //this.scene.scene.bringToTop("GameScene");
+            //this.scene.scene.resume("GameScene");
+            //Must call a Attack function to initiate the attack
+            //Attack(damageAmount, collectedTilesAmount);
+        });
+    }
+
+    update() {
+        var pointer = this.input.activePointer;
     }
 
     //Return a bool flag if the added tile can be part of the chain
