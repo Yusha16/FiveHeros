@@ -16,7 +16,9 @@ class AttackScene extends Phaser.Scene {
         this.collectedTiles = Array();
         this.connectedTilesText = null;
         this.graphicsLine = null;
+        this.connectedLines = Array();
 
+        this.undoPossible = true;
         this.stopInput = false;
     }
 
@@ -181,6 +183,7 @@ class AttackScene extends Phaser.Scene {
             //Clear out the line data
             this.scene.graphicsLine.clear();
             this.scene.graphicsLine.lineStyle(8, "0xFFC0CB", 1); 
+            this.scene.connectedLines = Array();
             //Reset the rules
             this.scene.colourRule = "";
             this.scene.shapeRule = "";
@@ -189,6 +192,7 @@ class AttackScene extends Phaser.Scene {
         //Set up the graphics for the line
         this.graphicsLine = this.add.graphics();
         this.graphicsLine.lineStyle(8, "0xFFC0CB", 1);
+        this.connectedLines = Array();
     }
 
     update() {
@@ -297,6 +301,50 @@ class AttackScene extends Phaser.Scene {
         return new Tile (x, y, colour, shape, this);
     }
 
+    //Function that undos the tile selected (when backward to undo last tile selected)
+    Undo() {
+        console.log("Undo");
+        this.undoPossible = false;
+        //Remove the tile from the collected tiles
+        this.numberConnected--;
+        let removedTile = this.collectedTiles.pop();
+        removedTile.image.setAlpha(1);
+        this.connectedTilesText.setText(this.numberConnected + " Tile(s)");
+        //Must Reset the rules back 1 tile (meaning we have to find out the current rule)
+        this.colourRule = this.collectedTiles[this.collectedTiles.length - 1].colour;
+        this.shapeRule = this.collectedTiles[this.collectedTiles.length - 1].shape;
+        //Look backward for the most unique shape and colour
+        for (let i = this.collectedTiles.length - 2; i > 0; i--) {
+            //Only check if the tile is not a wild tile
+            if (this.collectedTiles[i].colour != "yellow") {
+                //Only if the current rule is wild tile then
+                if (this.colourRule === "yellow") {
+                    this.colourRule = this.collectedTiles[i].colour;
+                    this.shapeRule = this.collectedTiles[i].shape;
+                }
+                //if the colour does not match then
+                else if (this.colourRule != this.collectedTiles[i].colour) {
+                    this.colourRule = "";
+                    break;
+                }
+                //if the shape does not match then
+                else if (this.shapeRule != this.collectedTiles[i].shape) {
+                    this.shapeRule = "";
+                    break;
+                }
+            }
+        }
+
+        //Remove the connected line
+        this.connectedLines.pop();
+        //Redraw all the lines
+        this.graphicsLine.clear();
+        this.graphicsLine.lineStyle(8, "0xFFC0CB", 1); 
+        for (let i = 0; i < this.connectedLines.length; i++) {
+            this.graphicsLine.strokeLineShape(this.connectedLines[i]);
+        }
+    }
+
     AddTileListener(tile) {
         tile.image.setInteractive();
         //Start the Chain
@@ -308,6 +356,7 @@ class AttackScene extends Phaser.Scene {
                 this.colourRule = tile.colour;
                 this.shapeRule = tile.shape;
                 this.connectedTilesText.setText(this.numberConnected + " Tile(s)");
+                this.undoPossible = false;
                 console.log("Start");
             }
         });
@@ -323,8 +372,17 @@ class AttackScene extends Phaser.Scene {
                 let line = new Phaser.Geom.Line(this.collectedTiles[this.numberConnected - 2].image.x, 
                     this.collectedTiles[this.numberConnected - 2].image.y, tile.image.x, tile.image.y);
                 this.graphicsLine.strokeLineShape(line);
+                this.connectedLines.push(line);
+                this.undoPossible = false;
                 console.log("Connect");
             }
+            else if (this.undoPossible && this.collectedTiles[this.numberConnected - 2] == tile) {
+                this.Undo();
+            }
+        });
+        //Turn on the undo when the pointer leaves the tile
+        tile.image.on('pointerout', () => {
+                this.undoPossible = true;
         });
     }
 }
