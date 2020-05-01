@@ -6,6 +6,7 @@ class AttackScene extends Phaser.Scene {
         this.y = 125;
         this.width = 450;
         this.height = 475;
+        this.menuRect = null;
 
         //For the Tiles on the Sceen
         this.colourRule = "";
@@ -41,11 +42,8 @@ class AttackScene extends Phaser.Scene {
     create ()
     {
         //Background of the Attack Menu
-        let graphics = this.add.graphics();
-        graphics.fillStyle("0xffe6c8", 1);
-        graphics.fillRect(0, 0, this.width, this.height);
+        this.menuRect = this.add.rectangle(this.width / 2, this.height / 2, this.width, this.height, '0xffe6c8');
         
-
         //Set the Menu to the ceneter of the Game
         this.cameras.main.setViewport(this.x, this.y, this.width, this.height);
 
@@ -95,6 +93,11 @@ class AttackScene extends Phaser.Scene {
         //Add a event when the player released the mouse
         this.input.on('pointerup', function (pointer) {
             console.log("End");
+            //Keep listening if the player has not clicked on a tile
+            if (this.scene.numberConnected === 0) {
+                console.log("Nothing");
+                return;
+            }
             //Must remove all the tiles and replace with new tiles at the same time calculate the total damage amount
             //Fill from bottom right to top left in a left to right going up pattern
             let damageAmount = 0;
@@ -174,7 +177,7 @@ class AttackScene extends Phaser.Scene {
                 this.scene.scene.bringToTop("GameScene");
                 this.scene.scene.resume("GameScene");
                 //Must call a Attack function to initiate the attack
-                Attack(damageAmount, collectedTilesAmount);
+                Attack(damageAmount, collectedTilesAmount, this.scene.scene.get("GameScene"));
             });
 
             //Clear out all the data of the collected tiles

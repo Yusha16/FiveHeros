@@ -12,6 +12,15 @@ function Character(name, colour, trait, leader, health, attack, special, ultimat
     this.ace = ace;
     this.sprite = sprite;
     this.condition = "";
+
+    //Whenever a animation is finshed
+    this.sprite.on('animationcomplete', function (anim, frame) {
+        //if the animation is not idle return to idle state
+        if (anim.key != "idle") {
+            console.log("Switch");
+            this.anims.play('idle');
+        }
+    }, this.sprite);
 }
 
 //Function to set up all animations to be used in the game
@@ -28,14 +37,14 @@ function SetUpAnimations(gameManager) {
         key: 'attack',
         frames: game.anims.generateFrameNumbers('sara', { start: 4, end: 7 }),
         frameRate: 4,
-        repeat: -1
+        repeat: 0
     });
 
     gameManager.anims.create({
         key: 'hurt',
         frames: game.anims.generateFrameNumbers('sara', { start: 8, end: 9 }),
         frameRate: 4,
-        repeat: -1
+        repeat: 0
     });
 
 }

@@ -7,6 +7,8 @@ class GameScene extends Phaser.Scene {
         this.CHARACTER_POSITIONS = [[175, 250], [175, 375], [175, 500], [50, 250], [50, 375], [50, 500]];
         this.characters = Array();
 
+        this.selectedCharacter = null;
+
     }
 
     preload ()
@@ -34,10 +36,11 @@ class GameScene extends Phaser.Scene {
         
         for (let i = 0; i < 6; i++) {
             //characters[i].anims.play('idle', true);
-            this.characters[i].sprite.anims.play('idle', true);
+            this.characters[i].sprite.anims.play('idle');
         }    
-        this.characters[2].sprite.anims.play('attack', true);
-        
+        this.selectedCharacter = this.characters[0];
+        //Just testing animation changes
+        //this.characters[2].sprite.anims.play('attack', true);
 
         //Create a attack button (Note this is just a test button!!!)
         var attackButton = this.add.text(100, 100, 'Attack', { fill: '#ffffff' })
@@ -206,7 +209,9 @@ function UpdateHealthBarColor(health) {
 //damageAmount is calculated in the attack scene due to knowing which tile is selected (same colour bonus rule)
     //Note: damageAmount might double again if the selected character has colour advantage against the enemy
 //numConnected is number of tiles connected to know if the player can use ultimate or ace ability
-function Attack(damageAmount, numConnected) {
+function Attack(damageAmount, numConnected, gameScene) {
     console.log("Attack");
+    gameScene.selectedCharacter.sprite.anims.play('attack', true);
+    //this.selectedCharacter.anim.on('complete', function(currentAnim, currentFrame, sprite){});
 
 }
