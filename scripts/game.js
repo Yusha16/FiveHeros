@@ -9,6 +9,9 @@ class GameScene extends Phaser.Scene {
 
         this.selectedCharacter = null;
 
+        this.ENEMY_CHARACTER_POSITIONS = [[700, 250], [700, 375], [700, 500]];
+        this.selectedEnemyCharacter = null;
+        this.enemyCharacters = Array();
     }
 
     preload ()
@@ -16,7 +19,7 @@ class GameScene extends Phaser.Scene {
         this.load.setPath('assets/');
         this.load.image('forest', 'background/forest.png');
         this.load.spritesheet('sara', 'sara/sara.png', { frameWidth: 200, frameHeight: 200 });
-
+        this.load.spritesheet('zephyr', 'zephyr/zephyr.png', { frameWidth: 200, frameHeight: 200 });
     }
     create ()
     {
@@ -32,15 +35,29 @@ class GameScene extends Phaser.Scene {
             this.add.sprite(this.CHARACTER_POSITIONS[i][0], this.CHARACTER_POSITIONS[i][1], 'sara')));
         }
 
+        //Create the enemy
+        for (let i = 0; i < 3; i++) {
+            this.enemyCharacters.push(new EnemyCharacter("zephyr", "red", "n/a", 100, 5, "none", 
+            this.add.sprite(this.ENEMY_CHARACTER_POSITIONS[i][0], this.ENEMY_CHARACTER_POSITIONS[i][1], 'zephyr')));
+        }
+
         SetUpAnimations(this);
         
         for (let i = 0; i < 6; i++) {
             //characters[i].anims.play('idle', true);
-            this.characters[i].sprite.anims.play('idle');
+            //this.characters[i].sprite.anims.play('idle');
+            this.characters[i].SwitchAnimation('idle');
         }    
         this.selectedCharacter = this.characters[0];
         //Just testing animation changes
         //this.characters[2].sprite.anims.play('attack', true);
+        //Create the enemy
+        for (let i = 0; i < 3; i++) {
+            //this.enemyCharacters[i].sprite.anims.play('idle');
+            this.enemyCharacters[i].SwitchAnimation('idle');
+        }
+        this.selectedEnemyCharacter = this.enemyCharacters[0];
+
 
         //Create a attack button (Note this is just a test button!!!)
         var attackButton = this.add.text(100, 100, 'Attack', { fill: '#ffffff' })
@@ -211,7 +228,73 @@ function UpdateHealthBarColor(health) {
 //numConnected is number of tiles connected to know if the player can use ultimate or ace ability
 function Attack(damageAmount, numConnected, gameScene) {
     console.log("Attack");
-    gameScene.selectedCharacter.sprite.anims.play('attack', true);
-    //this.selectedCharacter.anim.on('complete', function(currentAnim, currentFrame, sprite){});
+    //gameScene.selectedCharacter.sprite.anims.play('attack', true);
+    gameScene.selectedCharacter.SwitchAnimation('attack');
+    
+    //Determine the numConnected if they can use the ultimate or ace ability
+    if (numConnected == 25) {
 
+    }
+    else if (numConnected > 16) {
+
+    }
+    damageAmount *= ColourDamageMultiplier(gameScene.selectedCharacter, gameScene.selectedEnemyCharacter);
+    //Decrease the damage amount to the enemy
+    gameScene.selectedEnemyCharacter.currentHealth -= damageAmount;
+    //Also update the health bar of the enemy
+
+    //gameScene.selectedEnemyCharacter.sprite.anims.play('hurt', true);
+    gameScene.selectedEnemyCharacter.SwitchAnimation('hurt');
+    
+    //Destroy the object (sprite and auto target to next enemy)
+    if (gameScene.selectedEnemyCharacter.currentHealth <= 0) {
+        gameScene.selectedEnemyCharacter.sprite.destroy(true);
+    }
+    
+}
+
+//Function that determine if the selected character has a colour advantage against the target character and vice versa
+//Returns a number value where there can be 3 different value
+//Advantage = 2
+//Neutral = 1
+//Disadvantage = 0.5
+//Rules:
+//Red > Green
+//Green > Blue
+//Blue > Red
+function ColourDamageMultiplier(selectedChar, targetChar) {
+    //if statement to determine the muliplier from the rules
+    if (selectedChar.colour == "red") {
+        if (targetChar.colour == "red") {
+            return 1;
+        }
+        else if (targetChar.colour == "green") {
+            return 2;
+        }
+        else {
+            return 0.5;
+        }
+    }
+    else if (selectedChar.colour == "green") {
+        if (targetChar.colour == "red") {
+            return 0.5;
+        }
+        else if (targetChar.colour == "green") {
+            return 1;
+        }
+        else {
+            return 2;
+        }
+    }
+    else {
+        if (targetChar.colour == "red") {
+            return 2;
+        }
+        else if (targetChar.colour == "green") {
+            return 0.5;
+        }
+        else {
+            return 1;
+        }
+    }
 }
