@@ -32,6 +32,10 @@ function Character(name, colour, trait, leader, health, attack, special, ultimat
             this.anims.play(name + "_idle");
         }
     }, this.sprite);
+
+    // this.sprite.on('pointerdown', () => {
+    //     this.add.rectangle(50, 50, 50, 0xff00ff);
+    // })
 }
 
 //Constructor for the Enemy Character

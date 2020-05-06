@@ -32,14 +32,42 @@ class GameScene extends Phaser.Scene {
             //characters[i].scaleX = 0.75;
             //characters[i].scaleY = 0.75;
             this.characters.push(new Character("sara", "red", "sword", "n/a", 100, 100, "Deal 250 damage", "Deal 500 damage", "Deal 1000 damage",
-            this.add.sprite(this.CHARACTER_POSITIONS[i][0], this.CHARACTER_POSITIONS[i][1], 'sara')));
+            this.add.sprite(this.CHARACTER_POSITIONS[i][0], this.CHARACTER_POSITIONS[i][1], 'sara')
+                .setName(`p_${i}`) //adding unique id to link gameObject to character array
+                .setInteractive()
+                // .on('pointerdown',(pointer, gameObject) => {
+                //     gameObject.destroy();
+                // })
+            ));
         }
 
         //Create the enemy
         for (let i = 0; i < 3; i++) {
-            this.enemyCharacters.push(new EnemyCharacter("zephyr", "red", "n/a", 100, 5, "none", 
-            this.add.sprite(this.ENEMY_CHARACTER_POSITIONS[i][0], this.ENEMY_CHARACTER_POSITIONS[i][1], 'zephyr')));
+            this.enemyCharacters.push(new EnemyCharacter("zephyr", "green", "n/a", 100, 5, "none",
+            this.add.sprite(this.ENEMY_CHARACTER_POSITIONS[i][0], this.ENEMY_CHARACTER_POSITIONS[i][1], 'zephyr')
+                .setName(`e_${i}`) //adding unique id to link gameObject to  enemy character array
+                .setInteractive()
+            ));
         }
+        //click listener for characters
+        this.input.on('gameobjectdown', function (pointer, gameObject) {
+
+            let id = gameObject.input.gameObject.name.split('_'); //split the id into array to separate enemies from player chars, and also allow for multidigit char counts
+            //TODO add position data trait to Characters to make IDing front line less dirty
+
+            //get character data from array based on split
+
+            let charData = id[0] === 'p' ? this.scene.characters[id[1]] : this.scene.enemyCharacters[id[1]];
+            //parse char color into hex, since it's currently being stored as a string, might want to change that
+            let charColor =
+                charData.colour === 'red' ? 0xff0000 :
+                charData.colour === 'blue' ?  0x0000ff :
+                    charData.colour === 'green' ? 0x00ff00 :
+                        0xffffff;
+
+            //create menu rect
+            var menuRect = this.scene.add.rectangle(50, 50, 50, 50, charColor);
+        });
 
         SetUpAnimations(this);
         
