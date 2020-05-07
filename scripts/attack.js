@@ -103,8 +103,8 @@ class AttackScene extends Phaser.Scene {
             let damageAmount = 0;
             let collectedTilesAmount = this.scene.numberConnected;
             let delayAmount = 0;
-            //let colourBonus = this.scene.scene.get("GameScene").selectedCharacter.colour;
-            //let charAttack = this.scene.scene.get("GameScene").selectedCharacter.attack;
+            let colourBonus = this.scene.scene.get("GameScene").selectedCharacter.colour;
+            let charAttack = this.scene.scene.get("GameScene").selectedCharacter.currentAttack;
             for (let y = 4; y >= 0; y--) {
                 for (let x = 4; x >= 0; x--) {
                     //if the current tile is in the collected tiles then
@@ -121,14 +121,14 @@ class AttackScene extends Phaser.Scene {
                                 this.targets[0].destroy(true);
                             }
                         });
-                        /*
+                        //Add the damage amount depending on the tile and character colour
                         if (this.scene.tiles[y][x].colour === colourBonus) {
                             damageAmount += charAttack * 2;
                         }
                         else {
                             damageAmount += charAttack;
                         }
-                        */
+                        
                         //Must move the next tiles to the tiles and the next tiles line must move
                         let nextTile = this.scene.nextTiles.pop();
                         let newTile = this.scene.GenerateNewTile(0, 6);

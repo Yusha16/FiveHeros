@@ -228,10 +228,11 @@ function UpdateHealthBarColor(health) {
 //numConnected is number of tiles connected to know if the player can use ultimate or ace ability
 function Attack(damageAmount, numConnected, gameScene) {
     console.log("Attack");
+    console.log(damageAmount + " " +  numConnected);
     //gameScene.selectedCharacter.sprite.anims.play('attack', true);
     gameScene.selectedCharacter.SwitchAnimation('attack');
     
-    //Determine the numConnected if they can use the ultimate or ace ability
+    //Determine the numConnected if they can use the ultimate or ace ability (this will be developed later when ace and ultimate are finalized)
     if (numConnected == 25) {
 
     }
@@ -249,8 +250,16 @@ function Attack(damageAmount, numConnected, gameScene) {
     //Destroy the object (sprite and auto target to next enemy)
     if (gameScene.selectedEnemyCharacter.currentHealth <= 0) {
         gameScene.selectedEnemyCharacter.sprite.destroy(true);
+        //Remove the ememy character from the array
+        for(let i = 0; i < gameScene.enemyCharacters.length; i++) {
+            if (gameScene.enemyCharacters[i] == gameScene.selectedEnemyCharacter) {
+                gameScene.enemyCharacters.splice(i, 1);
+                break;
+            }
+        }
+        //Auto target to next enemy
+        gameScene.selectedEnemyCharacter = gameScene.enemyCharacters[0];
     }
-    
 }
 
 //Function that determine if the selected character has a colour advantage against the target character and vice versa
