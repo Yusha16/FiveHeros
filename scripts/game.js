@@ -49,9 +49,10 @@ class GameScene extends Phaser.Scene {
         this.input.on('gameobjectdown', function (pointer, gameObject) {
             //make regex for character ids
             let idRegex = /(p|e)_\d+/i;
-
+            let name = gameObject.input.gameObject.name;
+            console.log(name);
             //add prehandling if the thing clicked is the close button
-            if (gameObject.input.gameObject.name === 'Close') {
+            if (/Close$/.test(name)) {
                 try {
                     menuContainer.removeAll(true);
                     return;
@@ -72,10 +73,10 @@ class GameScene extends Phaser.Scene {
 
 
             //check to make sure that character was clicked, also add handling to empty container if another character is clicked before closing previous menu
-            if (idRegex.test(gameObject.input.gameObject.name)) {
+            if (idRegex.test(name)) {
                 menuContainer.removeAll(true);
 
-                let id = gameObject.input.gameObject.name.split('_'); //split the id into array to separate enemies from player chars, and also allow for multidigit char counts
+                let id = name.split('_'); //split the id into array to separate enemies from player chars, and also allow for multidigit char counts
                 //TODO add position data trait to Characters to make IDing front line less dirty
                 //temp solution to render menus properly based on initial
                 let frontLine = id[0] === 'p' && id[1] < 3 ? true : false;
@@ -108,7 +109,7 @@ class GameScene extends Phaser.Scene {
                         continue;
                     }
 
-                    let menuItem = this.scene.add.text(menuRect.x, menuRect.y - menuRect.height / 2 + (menuRect.height / 8 * i), menuArray[i], {
+                    let menuItem = this.scene.add.text(menuRect.x, menuRect.y - menuRect.height / 2 + (menuRect.height / menuArray.length * i), menuArray[i], {
                             //fontSize: "24px",
                             font: 'bold 24px Arial',
                             fill: 'white',
@@ -120,11 +121,11 @@ class GameScene extends Phaser.Scene {
                     //add interactive and black box
                     if (i > 2) {
 
-                        let menuItemOutline = this.scene.add.rectangle(menuRect.x, menuRect.y - menuRect.height / 2 + (menuRect.height / 8 * i) + (menuItem.height / 2), menuRect.width - 25, menuItem.height);
+                        let menuItemOutline = this.scene.add.rectangle(menuRect.x, menuRect.y - menuRect.height / 2 + (menuRect.height / menuArray.length * i) + (menuItem.height / 2), menuRect.width - 25, menuItem.height);
                         menuItemOutline.setStrokeStyle(5, 0x000000);
 
-                        //set interaction on surrounding outline box, for easier hit
-                        menuItemOutline.setName(menuArray[i]);
+                        //set interaction on surrounding outline box, for easier hit, convert names with spaces into dashes, and join character ID with action ID
+                        menuItemOutline.setName(`${id[0]}_${id[1]}_${menuArray[i].split(' ').join('-')}`);
                         menuItemOutline.setInteractive();
 
                         menuContainer.add(menuItemOutline);
