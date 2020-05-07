@@ -121,16 +121,32 @@ class GameScene extends Phaser.Scene {
                             stroke: 'black'
                         }
                     );
+
                     menuItem.x -= menuItem.width / 2;
                     //add interactive and black box
                     if (i > 2) {
+
+
+
 
                         let menuItemOutline = this.scene.add.rectangle(menuRect.x, menuRect.y - menuRect.height / 2 + (menuRect.height / menuArray.length * i) + (menuItem.height / 2), menuRect.width - 25, menuItem.height);
                         menuItemOutline.setStrokeStyle(5, 0x000000);
 
                         //set interaction on surrounding outline box, for easier hit, convert names with spaces into dashes, and join character ID with action ID
                         menuItemOutline.setName(`${id[0]}_${id[1]}_${menuArray[i].split(' ').join('-')}`);
-                        menuItemOutline.setInteractive();
+                        //add in grey out and disable button for low special meter (less than 5)
+                        if(i === 4 && this.scene.special < 5)
+                        {
+                            // let disableOverlay = this.scene.add.rectangle(menuRect.x, menuRect.y - menuRect.height / 2 + (menuRect.height / menuArray.length * i) + (menuItem.height / 2), menuRect.width - 25, menuItem.height);
+                            // disableOverlay.setFillStyle(0x888888, 0.5);
+                            //
+                            // menuContainer.add(disableOverlay);
+                            menuItem.setTint(0x888888);
+                            //menuItemOutline.setFillStyle(0x000000, 0.5);
+                        } else {
+                            menuItemOutline.setInteractive();
+                        }
+
 
                         menuContainer.add(menuItemOutline);
                     }
@@ -206,7 +222,7 @@ class GameScene extends Phaser.Scene {
         //set listener to change special bar fill percent, set to right arrow down just to test
 
         this.input.keyboard.on('keydown', function (event) {
-           UpdateSpecialValue(this, 2);
+           UpdateSpecialValue(this, 1);
         });
 
 
