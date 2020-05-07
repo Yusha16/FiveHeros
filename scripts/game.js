@@ -11,6 +11,10 @@ class GameScene extends Phaser.Scene {
         this.ENEMY_CHARACTER_POSITIONS = [[700, 250], [700, 375], [700, 500]];
         this.selectedEnemyCharacter = null;
         this.enemyCharacters = Array();
+
+        this.health = 100;
+        this.special = 0;
+        this.Bars = {};
     }
 
     preload() {
@@ -170,38 +174,20 @@ class GameScene extends Phaser.Scene {
 
         healthBarOutline.setStrokeStyle(5, 0x00ff00);
         //create health bar fill
-        var healthBarFill = this.add.rectangle(50, 35, 700, 25, 0x00ff00).setOrigin(0, 0);
+        var healthBarFill = this.add.rectangle(50, 35, 700 * (this.health / 100), 25, 0x00ff00).setOrigin(0, 0);
 
-        //set the health data attribute and color function
-        healthBarOutline.setDataEnabled();
+        //set the health bar to be globally stored
+        this.Bars.healthBar = {};
+        this.Bars.healthBar.fill = healthBarFill;
+        this.Bars.healthBar.outline = healthBarOutline;
 
-        healthBarOutline.data.set('health', 100);
 
         //set listener to change health bar outline and fill color and percent, set to pointerdown just to test
-
-
         this.input.on('pointerdown', function () {
-            if (healthBarOutline.data.get('health') > 0) {
-                healthBarOutline.data.values.health -= 2;
-                console.log('decreasing health value');
-            } else {
-                healthBarOutline.data.values.health = 0;
-            }
+            UpdateHealthValue(this, -1);
+        });
 
 
-        });
-        //add function to change health bar and fill when health is changed, for whatever reason 'changedata-health' won't trigger, so the broad 'changedata'
-        //is used instead on the healthbarOutline
-        healthBarOutline.on('changedata', function (gameObject, value) {
-            if (value < 0) {
-                gameObject.data.value.health = 0;
-            }
-            console.log(`updating health display`);
-            let currentHealth = healthBarOutline.data.get('health');
-            healthBarOutline.setStrokeStyle(5, UpdateHealthBarColor(currentHealth));
-            healthBarFill.displayWidth = (currentHealth / 100 * 700);
-            healthBarFill.setFillStyle(UpdateHealthBarColor(currentHealth));
-        });
 
         //create basic special bar
         //create a special bar outline
@@ -210,36 +196,20 @@ class GameScene extends Phaser.Scene {
         specialBarOutline.setStrokeStyle(5, 0x49def5);
 
         //create special bar fill
-        var specialBarFill = this.add.rectangle(50, 75, 700, 25, 0x49def5).setOrigin(0, 0);
+        var specialBarFill = this.add.rectangle(50, 75, 0.000001, 25, 0x49def5).setOrigin(0, 0); //can't modify width of 0, so make it a really small number instead
+        specialBarFill.setName('specialBarFill');
+        //add it to global tracking for easy access from functions
+        this.Bars.specialBar = specialBarFill;
 
-        //set the health data attribute and color function
-        specialBarOutline.setDataEnabled();
 
-        specialBarOutline.data.set('special', 100);
 
         //set listener to change special bar fill percent, set to right arrow down just to test
 
         this.input.keyboard.on('keydown', function (event) {
-            if (specialBarOutline.data.get('special') > 0) {
-                specialBarOutline.data.values.special -= 2;
-                console.log('decreasing special value');
-            } else {
-                specialBarOutline.data.values.special = 0;
-            }
-
-
+           UpdateSpecialValue(this, 2);
         });
 
-        //add function to change special bar fill when special is changed, for whatever reason 'changedata-special' won't trigger, so the broad 'changedata'
-        //is used instead on the specialBarOutline
-        specialBarOutline.on('changedata', function (gameObject, value) {
-            if (value < 0) {
-                gameObject.data.value.special = 0;
-            }
-            console.log(`updating special display`);
-            let currentSpecial = specialBarOutline.data.get('special');
-            specialBarFill.displayWidth = (currentSpecial / 100 * 700);
-        });
+
 
 
         this.scene.bringToTop("GameScene");
@@ -292,7 +262,7 @@ function UpdateHealthBarColor(health) {
         if (health >= 50) {
             let red = Math.floor((-((health - 100) / 100 * 2 * 0xFF))).toString(16);
             returnColor = parseInt(`0x${red}FF00`);
-            console.log(`red value is ${red} and returnColor is ${returnColor}`);
+            //console.log(`red value is ${red} and returnColor is ${returnColor}`);
         } else {
             let green = Math.floor((((health * 2) / 100 * 0xFF))).toString(16);
             //add preceeding zero when under 10 to maintain proper hex value
@@ -300,7 +270,7 @@ function UpdateHealthBarColor(health) {
                 green = `0${green}`;
             }
             returnColor = parseInt(`0xFF${green}00`);
-            console.log(`green value is ${green} and returnColor is ${returnColor}`);
+            //console.log(`green value is ${green} and returnColor is ${returnColor}`);
         }
         return returnColor;
     } catch (err) {
@@ -376,4 +346,35 @@ function ColourDamageMultiplier(selectedChar, targetChar) {
             return 1;
         }
     }
+}
+
+//function to change global special value, and update bar display
+function UpdateSpecialValue(gameObject, value) {
+    if (gameObject.scene.special + value > 100) {
+        gameObject.scene.special = 100;
+    } else if (gameObject.scene.special + value < 0) {
+        gameObject.scene.special = 0;
+    } else {
+        gameObject.scene.special += value;
+    }
+    console.log(`updating special display`);
+    let specialBarFill = gameObject.scene.Bars.specialBar;
+    specialBarFill.displayWidth = (gameObject.scene.special / 100 * 700);
+}
+
+//function to change global health value, and update bar display
+
+function UpdateHealthValue (gameObject, value) {
+    if (gameObject.scene.health + value > 100) {
+        gameObject.scene.health = 100;
+    } else if (gameObject.scene.health + value < 0) {
+        gameObject.scene.health = 0;
+    } else {
+        gameObject.scene.health += value;
+    }
+    let healthBarFill = gameObject.scene.Bars.healthBar.fill;
+    let healthBarOutline = gameObject.scene.Bars.healthBar.outline;
+    healthBarOutline.setStrokeStyle(5, UpdateHealthBarColor(gameObject.scene.health));
+    healthBarFill.displayWidth = (gameObject.scene.health / 100 * 700);
+    healthBarFill.setFillStyle(UpdateHealthBarColor(gameObject.scene.health));
 }
