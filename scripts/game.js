@@ -64,6 +64,17 @@ class GameScene extends Phaser.Scene {
                     console.error(`There was an error attempting to close menu with error: ${e}`);
                 }
             }
+            else if (/Attack$/.test(name)) {
+                try {
+                    menuContainer.removeAll(true);
+                    this.scene.scene.pause("GameScene");
+                    this.scene.scene.bringToTop("AttackScene");
+                    this.scene.scene.resume("AttackScene");
+                    return;
+                } catch (e) {
+                    console.error(`There was an error for starting the attack scene: ${e}`);
+                }
+            }
             //add handling for first menu
             if(!menuContainer)
             {
@@ -85,6 +96,14 @@ class GameScene extends Phaser.Scene {
                 //temp solution to render menus properly based on initial
                 let frontLine = id[0] === 'p' && id[1] < 3 ? true : false;
                 //get character data from array based on split
+
+                //Set the selected character 
+                if (id[0] === 'p') {
+                    this.scene.selectedCharacter = this.scene.characters[id[1]];
+                }
+                else {
+                    this.scene.selectedEnemyCharacter = this.scene.enemyCharacters[id[1]];
+                }
 
                 let charData = id[0] === 'p' ? this.scene.characters[id[1]] : this.scene.enemyCharacters[id[1]];
                 //parse char color into hex, since it's currently being stored as a string, might want to change that
@@ -177,6 +196,7 @@ class GameScene extends Phaser.Scene {
 
 
         //Create a attack button (Note this is just a test button!!!)
+        /*
         var attackButton = this.add.text(100, 100, 'Attack', {fill: '#ffffff'})
             .setInteractive()
             .on('pointerup', () => {
@@ -185,6 +205,7 @@ class GameScene extends Phaser.Scene {
                     this.scene.resume("AttackScene");
                 }
             );
+            */
         //create a health bar outline
         var healthBarOutline = this.add.rectangle(400, 50, 700, 25);
 
@@ -222,7 +243,7 @@ class GameScene extends Phaser.Scene {
         //set listener to change special bar fill percent, set to right arrow down just to test
 
         this.input.keyboard.on('keydown', function (event) {
-           UpdateSpecialValue(this, 1);
+            //UpdateSpecialValue(this, 1);
         });
 
 
@@ -305,6 +326,9 @@ function Attack(damageAmount, numConnected, gameScene) {
     console.log(damageAmount + " " +  numConnected);
     //gameScene.selectedCharacter.sprite.anims.play('attack', true);
     gameScene.selectedCharacter.SwitchAnimation('attack');
+
+    //Update the special bar
+    UpdateSpecialValue(gameScene, numConnected);
     
     //Determine the numConnected if they can use the ultimate or ace ability (this will be developed later when ace and ultimate are finalized)
     if (numConnected == 25) {
@@ -323,6 +347,10 @@ function Attack(damageAmount, numConnected, gameScene) {
     //Destroy the object (sprite and auto target to next enemy)
     if (gameScene.selectedEnemyCharacter.currentHealth <= 0) {
         gameScene.selectedEnemyCharacter.sprite.destroy(true);
+
+        //Cannot remove due to the method of the menu and selecting character will not work
+        //Must empty when all the enemy are destroyed
+        /*
         //Remove the ememy character from the array
         for(let i = 0; i < gameScene.enemyCharacters.length; i++) {
             if (gameScene.enemyCharacters[i] == gameScene.selectedEnemyCharacter) {
@@ -332,6 +360,19 @@ function Attack(damageAmount, numConnected, gameScene) {
         }
         //Auto target to next enemy
         gameScene.selectedEnemyCharacter = gameScene.enemyCharacters[0];
+        */
+        //Auto target to next enemy that is alive
+        for(let i = 0; i < gameScene.enemyCharacters.length; i++) {
+            if (gameScene.enemyCharacters[i].currentHealth > 0) {
+                gameScene.selectedEnemyCharacter = gameScene.enemyCharacters[i];
+                break;
+            }
+            else if (i == gameScene.enemyCharacters.length - 1) {
+                //We won
+                console.log("You win");
+                gameScene.enemyCharacters = Array();
+            }
+        }
     }
 }
 
@@ -374,17 +415,17 @@ function ColourDamageMultiplier(selectedChar, targetChar) {
 }
 
 //function to change global special value, and update bar display
-function UpdateSpecialValue(gameObject, value) {
-    if (gameObject.scene.special + value > 100) {
-        gameObject.scene.special = 100;
-    } else if (gameObject.scene.special + value < 0) {
-        gameObject.scene.special = 0;
+function UpdateSpecialValue(gameScene, value) {
+    if (gameScene.special + value > 100) {
+        gameScene.special = 100;
+    } else if (gameScene.special + value < 0) {
+        gameScene.special = 0;
     } else {
-        gameObject.scene.special += value;
+        gameScene.special += value;
     }
     console.log(`updating special display`);
-    let specialBarFill = gameObject.scene.Bars.specialBar;
-    specialBarFill.displayWidth = (gameObject.scene.special / 100 * 700);
+    let specialBarFill = gameScene.Bars.specialBar;
+    specialBarFill.displayWidth = (gameScene.special / 100 * 700);
 }
 
 //function to change global health value, and update bar display
