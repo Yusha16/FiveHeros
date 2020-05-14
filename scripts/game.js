@@ -43,7 +43,7 @@ class GameScene extends Phaser.Scene {
 
         //Create the enemy
         for (let i = 0; i < 3; i++) {
-            this.enemyCharacters.push(new EnemyCharacter("zephyr", "green", "n/a", 100, 5, "none",
+            this.enemyCharacters.push(new EnemyCharacter("zephyr", "green", "n/a", 1000, 5, "none",
                 this.add.sprite(this.ENEMY_CHARACTER_POSITIONS[i][0], this.ENEMY_CHARACTER_POSITIONS[i][1], 'zephyr')
                     .setName(`e_${i}`) //adding unique id to link gameObject to  enemy character array
                     .setInteractive()
@@ -207,11 +207,11 @@ class GameScene extends Phaser.Scene {
             );
             */
         //create a health bar outline
-        var healthBarOutline = this.add.rectangle(400, 50, 700, 25);
+        var healthBarOutline = this.add.rectangle(400, 75, 700, 25);
 
         healthBarOutline.setStrokeStyle(5, 0x00ff00);
         //create health bar fill
-        var healthBarFill = this.add.rectangle(50, 35, 700 * (this.health / 100), 25, 0x00ff00).setOrigin(0, 0);
+        var healthBarFill = this.add.rectangle(50, 60, 700 * (this.health / 100), 25, 0x00ff00).setOrigin(0, 0);
 
         //set the health bar to be globally stored
         this.Bars.healthBar = {};
@@ -228,12 +228,12 @@ class GameScene extends Phaser.Scene {
 
         //create basic special bar
         //create a special bar outline
-        var specialBarOutline = this.add.rectangle(400, 90, 700, 25);
+        var specialBarOutline = this.add.rectangle(400, 115, 700, 25);
 
         specialBarOutline.setStrokeStyle(5, 0x49def5);
 
         //create special bar fill
-        var specialBarFill = this.add.rectangle(50, 75, 0.000001, 25, 0x49def5).setOrigin(0, 0); //can't modify width of 0, so make it a really small number instead
+        var specialBarFill = this.add.rectangle(50, 100, 0.000001, 25, 0x49def5).setOrigin(0, 0); //can't modify width of 0, so make it a really small number instead
         specialBarFill.setName('specialBarFill');
         //add it to global tracking for easy access from functions
         this.Bars.specialBar = specialBarFill;
@@ -247,6 +247,55 @@ class GameScene extends Phaser.Scene {
         });
 
 
+        //Add Menu Button
+        var menuButtonOutline = this.add.rectangle(150, 25, 200, 25);
+        menuButtonOutline.setStrokeStyle(5, 0xE5D3B3);
+        var menuButton = this.add.rectangle(150, 25, 200, 25, 0xE5D3B3).setInteractive()
+            .on('pointerup', () => {
+                //Code to set up the menu (for the future)
+            }
+        );
+        //For some reason the position is off when using (menuButton.x, menuButton.y - menuButton.height / 2)
+        var menuText =  this.add.text(menuButton.x - menuButton.width / 5, menuButton.y - menuButton.height / 2, 'Menu', 
+            { 
+                font: 'bold 24px Arial',
+                fill: 'black',
+            }
+        );
+
+        //Add Turns Text
+        var turnRectOutline = this.add.rectangle(325, 25, 125, 25);
+        turnRectOutline.setStrokeStyle(5, 0xE5D3B3);
+        var turnRect = this.add.rectangle(325, 25, 125, 25, 0xE5D3B3);
+        //menuButton.setOrigin(0, 0);
+        var turnsText =  this.add.text(turnRect.x - turnRect.width / 4, turnRect.y - turnRect.height / 2, 'Turn 1', 
+            { 
+                font: 'bold 24px Arial',
+                fill: 'black',
+            }
+        );
+
+        //Wave Count Text
+        var waveCountRectOutline = this.add.rectangle(475, 25, 150, 25);
+        waveCountRectOutline.setStrokeStyle(5, 0xE5D3B3);
+        var waveCountRect = this.add.rectangle(475, 25, 150, 25, 0xE5D3B3);
+        var waveCountText =  this.add.text(waveCountRect.x - waveCountRect.width / 3, waveCountRect.y - waveCountRect.height / 2, 'Wave 1 / 2', 
+            { 
+                font: 'bold 24px Arial',
+                fill: 'black',
+            }
+        );
+
+        //Action Count Text
+        var actionCountRectOutline = this.add.rectangle(660, 25, 185, 25);
+        actionCountRectOutline.setStrokeStyle(5, 0xE5D3B3);
+        var actionCountRect = this.add.rectangle(660, 25, 185, 25, 0xE5D3B3);
+        var actionCountText =  this.add.text(actionCountRect.x - actionCountRect.width / 2.25, actionCountRect.y - actionCountRect.height / 2, 'Actions Left: 3', 
+            { 
+                font: 'bold 24px Arial',
+                fill: 'black',
+            }
+        );
 
 
         this.scene.bringToTop("GameScene");
