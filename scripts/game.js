@@ -15,6 +15,14 @@ class GameScene extends Phaser.Scene {
         this.health = 100;
         this.special = 0;
         this.Bars = {};
+
+
+        this.turnsCount = 1;
+        this.turnsCountText = null;
+        this.wavesCount = 1;
+        this.wavesCountText = null;
+        this.actionsCountLeft = 3;
+        this.actionsCountLeftText = null;
     }
 
     preload() {
@@ -22,6 +30,8 @@ class GameScene extends Phaser.Scene {
         this.load.image('forest', 'background/forest.png');
         this.load.spritesheet('sara', 'sara/sara.png', {frameWidth: 200, frameHeight: 200});
         this.load.spritesheet('zephyr', 'zephyr/zephyr.png', {frameWidth: 200, frameHeight: 200});
+
+        OutlinePipeline = game.renderer.addPipeline('outline', new OutlinePipeline(game));
     }
 
     create() {
@@ -99,10 +109,14 @@ class GameScene extends Phaser.Scene {
 
                 //Set the selected character 
                 if (id[0] === 'p') {
+                    this.scene.selectedCharacter.sprite.resetPipeline();
                     this.scene.selectedCharacter = this.scene.characters[id[1]];
+                    this.scene.selectedCharacter.sprite.setPipeline("outline");
                 }
                 else {
+                    this.scene.selectedEnemyCharacter.sprite.resetPipeline();
                     this.scene.selectedEnemyCharacter = this.scene.enemyCharacters[id[1]];
+                    this.scene.selectedEnemyCharacter.sprite.setPipeline("outline");
                 }
 
                 let charData = id[0] === 'p' ? this.scene.characters[id[1]] : this.scene.enemyCharacters[id[1]];
@@ -185,6 +199,7 @@ class GameScene extends Phaser.Scene {
             this.characters[i].SwitchAnimation('idle');
         }
         this.selectedCharacter = this.characters[0];
+        this.selectedCharacter.sprite.setPipeline("outline");
         //Just testing animation changes
         //this.characters[2].sprite.anims.play('attack', true);
         //Create the enemy
@@ -193,6 +208,7 @@ class GameScene extends Phaser.Scene {
             this.enemyCharacters[i].SwitchAnimation('idle');
         }
         this.selectedEnemyCharacter = this.enemyCharacters[0];
+        this.selectedEnemyCharacter.sprite.setPipeline("outline");
 
 
         //Create a attack button (Note this is just a test button!!!)
@@ -268,7 +284,7 @@ class GameScene extends Phaser.Scene {
         turnRectOutline.setStrokeStyle(5, 0xE5D3B3);
         var turnRect = this.add.rectangle(325, 25, 125, 25, 0xE5D3B3);
         //menuButton.setOrigin(0, 0);
-        var turnsText =  this.add.text(turnRect.x - turnRect.width / 4, turnRect.y - turnRect.height / 2, 'Turn 1', 
+        this.turnsCountText =  this.add.text(turnRect.x - turnRect.width / 4, turnRect.y - turnRect.height / 2, 'Turn 1', 
             { 
                 font: 'bold 24px Arial',
                 fill: 'black',
@@ -279,7 +295,7 @@ class GameScene extends Phaser.Scene {
         var waveCountRectOutline = this.add.rectangle(475, 25, 150, 25);
         waveCountRectOutline.setStrokeStyle(5, 0xE5D3B3);
         var waveCountRect = this.add.rectangle(475, 25, 150, 25, 0xE5D3B3);
-        var waveCountText =  this.add.text(waveCountRect.x - waveCountRect.width / 3, waveCountRect.y - waveCountRect.height / 2, 'Wave 1 / 2', 
+        this.wavesCountText =  this.add.text(waveCountRect.x - waveCountRect.width / 3, waveCountRect.y - waveCountRect.height / 2, 'Wave 1 / 2', 
             { 
                 font: 'bold 24px Arial',
                 fill: 'black',
@@ -290,7 +306,7 @@ class GameScene extends Phaser.Scene {
         var actionCountRectOutline = this.add.rectangle(660, 25, 185, 25);
         actionCountRectOutline.setStrokeStyle(5, 0xE5D3B3);
         var actionCountRect = this.add.rectangle(660, 25, 185, 25, 0xE5D3B3);
-        var actionCountText =  this.add.text(actionCountRect.x - actionCountRect.width / 2.25, actionCountRect.y - actionCountRect.height / 2, 'Actions Left: 3', 
+        this.actionsCountLeftText =  this.add.text(actionCountRect.x - actionCountRect.width / 2.25, actionCountRect.y - actionCountRect.height / 2, 'Actions Left: 3', 
             { 
                 font: 'bold 24px Arial',
                 fill: 'black',
@@ -331,7 +347,8 @@ class GameScene extends Phaser.Scene {
 }
 
 var config = {
-    type: Phaser.AUTO,
+    //type: Phaser.AUTO,
+    type: Phaser.WEBGL,
     width: 800,
     height: 600,
     scene: [GameScene, AttackScene]
@@ -414,6 +431,7 @@ function Attack(damageAmount, numConnected, gameScene) {
         for(let i = 0; i < gameScene.enemyCharacters.length; i++) {
             if (gameScene.enemyCharacters[i].currentHealth > 0) {
                 gameScene.selectedEnemyCharacter = gameScene.enemyCharacters[i];
+                gameScene.selectedEnemyCharacter.sprite.setPipeline("outline");
                 break;
             }
             else if (i == gameScene.enemyCharacters.length - 1) {
@@ -423,6 +441,17 @@ function Attack(damageAmount, numConnected, gameScene) {
             }
         }
     }
+
+    //Update the action count text
+    gameScene.actionsCountLeft--;
+    gameScene.actionsCountLeftText.setText("Actions Left: " + gameScene.actionsCountLeft);
+
+    //if the action count is 0 then enemy turn
+    if (gameScene.actionsCountLeft == 0) 
+    {
+        //Call Enemy AI Code
+    }
+
 }
 
 //Function that determine if the selected character has a colour advantage against the target character and vice versa
