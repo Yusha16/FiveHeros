@@ -16,6 +16,9 @@ function Character(name, colour, trait, leader, health, attack, special, ultimat
     this.currentAttack = attack;
     this.condition = "";
 
+    //add in a determining characteristic for if chara is in front or backline, false by default
+    this.frontLine = false;
+
     //Switch Animation
     this.SwitchAnimation = function(key) {
         this.sprite.anims.play(this.name + "_" + key);
