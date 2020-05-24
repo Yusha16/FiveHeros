@@ -188,6 +188,10 @@ class GameScene extends Phaser.Scene {
                         frontLine = true;
                         //turn off isSwitch
                         isSwitch = false;
+
+                        //uncomment the following 2 lines if you don't want the character you swapped with's menu automatically opening for the switch.
+                        // menuContainer.removeAll(true);
+                        // return;
                     } else { //else just jump out of the cycle completely
                         return;
                     }
