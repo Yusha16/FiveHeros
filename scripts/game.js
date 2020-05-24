@@ -39,6 +39,8 @@ class GameScene extends Phaser.Scene {
         var background = this.add.image(400, 300, 'forest');
         background.scaleX = 3;
         background.scaleY = 4;
+        var isSwitch = false;
+        var switchID;
 
         for (let i = 0; i < 6; i++) {
             //characters.push(this.add.sprite(CHARACTER_POSITIONS[i][0], CHARACTER_POSITIONS[i][1], 'sara'));
@@ -49,6 +51,9 @@ class GameScene extends Phaser.Scene {
                     .setName(`p_${i}`) //adding unique id to link gameObject to character array
                     .setInteractive()
             ));
+            //set default setting of initial frontLine attributes for first 3 characters
+            this.characters[i].frontLine = i < 3 ? true : false;
+
         }
 
         //Create the enemy
@@ -84,6 +89,49 @@ class GameScene extends Phaser.Scene {
                 } catch (e) {
                     console.error(`There was an error for starting the attack scene: ${e}`);
                 }
+            } //add in handling for switch command being clicked
+            else if (/Switch$/.test(name)) {
+                try {
+                    //remove current container items
+                    menuContainer.removeAll(true);
+                    //get the ID of the character that's being switched and store it
+                    switchID = name.split('_');
+                    switchID = `p_${switchID[1]}`;
+                    //render box to cancel switch
+                    var menuRect = this.scene.add.rectangle(400, 275, 300, 150, 0xFFFFFF, 0);
+                    menuContainer.add(menuRect);
+                    //flip on switch listener condition for mouse over
+                    isSwitch = true;
+                    //set cancel button properties
+                    let menuItem = this.scene.add.text(menuRect.x, menuRect.y, 'Cancel Switch', {
+                            //fontSize: "24px",
+                            font: 'bold 24px Arial',
+                            fill: 'white',
+                            strokeThickness: 6,
+                            stroke: 'black'
+                        }
+                    );
+
+                    menuItem.x -= menuItem.width / 2;
+                    menuItem.y -= menuItem.height / 2;
+
+                    let menuItemOutline = this.scene.add.rectangle(menuRect.x, menuRect.y, menuRect.width - 25, menuItem.height);
+                    menuItemOutline.setStrokeStyle(5, 0x000000);
+
+                    menuItemOutline.setName(`switch_cancel`);
+                    menuItemOutline.setInteractive();
+                    menuContainer.add(menuItemOutline);
+                    menuContainer.add(menuItem);
+
+                    return;
+                } catch (e) {
+                    console.error(`error rendering switch command ${name} with error code ${e}`)
+                }
+            } else if (name === 'switch_cancel') { //set handling for if the switch cancel button is clicked
+                isSwitch = false; //reset the switch flag
+                name = `${switchID}`; //set the name to the saved switchID
+                switchID = null; //reset the switch ID to null to avoid potential later errors from storing a stale value
+
             }
             //add handling for first menu
             if(!menuContainer)
@@ -93,20 +141,63 @@ class GameScene extends Phaser.Scene {
 
 
 
-
             //add handling for clicking characters
 
 
             //check to make sure that character was clicked, also add handling to empty container if another character is clicked before closing previous menu
             if (idRegex.test(name)) {
-                menuContainer.removeAll(true);
+
 
                 let id = name.split('_'); //split the id into array to separate enemies from player chars, and also allow for multidigit char counts
-                //TODO add position data trait to Characters to make IDing front line less dirty
-                //temp solution to render menus properly based on initial
-                let frontLine = id[0] === 'p' && id[1] < 3 ? true : false;
-                //get character data from array based on split
 
+                //get character data from array based on split
+                let charData = id[0] === 'p' ? this.scene.characters[id[1]] : this.scene.enemyCharacters[id[1]];
+
+                //solution to render menus properly based on frontLine attribute
+                let frontLine = id[0] === 'p' ? charData.frontLine : false;
+
+                //add handling if the switch condition is on and characters are clicked
+                if (isSwitch === true) {
+                    //only actually take action if it's a backline character clicked
+                    if(id[0] === 'p' && !frontLine) {
+                        //get the frontline chara that's being switched
+                        let switchCharaID = switchID.split('_');
+                        let switchCharaSprite = this.scene.characters[switchCharaID[1]].sprite;
+                        let charaSprite = this.scene.characters[id[1]].sprite;
+
+
+
+                        //animate the front going to the back
+                        this.scene.tweens.add({
+                            targets: switchCharaSprite,
+                            x: charaSprite.x,
+                            y: charaSprite.y,
+                            duration: 500
+                        });
+                        //animate the back going to the front
+                        this.scene.tweens.add({
+                            targets: charaSprite,
+                            x: switchCharaSprite.x,
+                            y: switchCharaSprite.y,
+                            duration: 500
+                        });
+                        //toggle the frontLine attribute for both
+                        this.scene.characters[switchCharaID[1]].frontLine = false;
+                        this.scene.characters[id[1]].frontLine = true;
+                        //also toggle the attribute locally for the function to render the menu correctly afterwards
+                        frontLine = true;
+                        //turn off isSwitch
+                        isSwitch = false;
+
+                        //uncomment the following 2 lines if you don't want the character you swapped with's menu automatically opening for the switch.
+                        // menuContainer.removeAll(true);
+                        // return;
+                    } else { //else just jump out of the cycle completely
+                        return;
+                    }
+                }
+                //set menuDestroyer only after checking for switch so that the switch menu doesn't dissapear if an enemy/frontline chara is clicked
+                menuContainer.removeAll(true);
                 //Set the selected character 
                 if (id[0] === 'p') {
                     this.scene.selectedCharacter.sprite.resetPipeline();
@@ -119,7 +210,8 @@ class GameScene extends Phaser.Scene {
                     this.scene.selectedEnemyCharacter.sprite.setPipeline("outline");
                 }
 
-                let charData = id[0] === 'p' ? this.scene.characters[id[1]] : this.scene.enemyCharacters[id[1]];
+
+
                 //parse char color into hex, since it's currently being stored as a string, might want to change that
                 let charColor =
                     charData.colour === 'red' ? 0xff0000 :
@@ -188,6 +280,29 @@ class GameScene extends Phaser.Scene {
                 }
             }
 
+
+        });
+
+        //put in listener for gameobject mouseover event
+        this.input.on('gameobjectover', function (pointer, gameObject) {
+            //first check if the switch is on
+            if(isSwitch) {
+                //make regex for character ids
+                let idRegex = /p_\d+/i;
+                let name = gameObject.input.gameObject.name;
+                console.log(name);
+                if (idRegex.test(name)) {
+                    //grab the charadata for the hovered character
+                    let switchChara = this.scene.characters[name.split('_')[1]];
+                    //only allow functions if the chara is not in the frontLine
+                    if (switchChara.frontLine === false) {
+                        this.scene.selectedCharacter.sprite.resetPipeline();
+                        this.scene.selectedCharacter = this.scene.characters[name.split('_')[1]];
+                        this.scene.selectedCharacter.sprite.setPipeline("outline");
+                    }
+
+                }
+            }
 
         });
 
